@@ -15,11 +15,11 @@ export default function BookTable({ books }) {
 				</TableHeader>
 				<TableBody>
 					{books.map((book) => (
-						<TableRow key={book?.id}>
-							<TableCell className='font-medium'>{book?.id}</TableCell>
-							<TableCell>{book?.title}</TableCell>
-							<TableCell>{book?.author}</TableCell>
-							<TableCell className='text-right'>{book?.isbn}</TableCell>
+						<TableRow key={book.id}>
+							<TableCell className='font-medium'>{book.id}</TableCell>
+							<TableCell>{book.title}</TableCell>
+							<TableCell>{book.author}</TableCell>
+							<TableCell className='text-right'>{book.isbn}</TableCell>
 						</TableRow>
 					))}
 				</TableBody>
