@@ -13,9 +13,13 @@ wss.on("connection", (ws) => {
     if (data.action === "scanQR") {
       // Xử lý quét mã QR
       const successs = data.data == "https://ziji.vercel.app/";
-      console.log(successs);
-
-      ws.send(JSON.stringify({ action: "authResult", success: successs }));
+      ws.send(
+        JSON.stringify({
+          action: "authResult",
+          success: successs,
+          role: "user",
+        })
+      );
     }
   });
 
