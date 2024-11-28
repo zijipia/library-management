@@ -1,11 +1,12 @@
 const WebSocket = require("ws");
+const Book = require("../models/Book");
 
 const wss = new WebSocket.Server({ port: 8080 });
 
 wss.on("connection", (ws) => {
   console.log("WebSocket connected");
 
-  ws.on("message", (message) => {
+  ws.on("message", async (message) => {
     const data = JSON.parse(message);
     console.log("Received WebSocket message:", data);
 
@@ -18,6 +19,14 @@ wss.on("connection", (ws) => {
           action: "authResult",
           success: successs,
           role: "user",
+        })
+      );
+    } else if (data.action === "getBooks") {
+      const books = await Book.find({});
+      ws.send(
+        JSON.stringify({
+          action: "books",
+          books,
         })
       );
     }

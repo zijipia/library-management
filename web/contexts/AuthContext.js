@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { useCallback } from "react";
 
 const AuthContext = createContext();
 
@@ -14,6 +14,19 @@ export function AuthProvider({ children }) {
 	const wsRef = useRef(null);
 
 	useEffect(() => {
+		// Khôi phục trạng thái từ localStorage
+		const storedAuth = localStorage.getItem("isAuthenticated");
+		const storedRole = localStorage.getItem("userRole");
+
+		if (storedAuth === "true" && storedRole) {
+			setIsAuthenticated(true);
+			setUserRole(storedRole);
+
+			// Điều hướng đến đúng trang dựa trên vai trò
+			router.push(storedRole === "admin" ? "/admin" : "/search");
+		}
+
+		// Thiết lập WebSocket
 		wsRef.current = new WebSocket("ws://localhost:8080");
 
 		wsRef.current.onopen = () => {
@@ -65,22 +78,13 @@ export function AuthProvider({ children }) {
 		router.push("/");
 	};
 
-	// const fetchBooks = () => {
-	// 	if (wsRef.current?.readyState === WebSocket.OPEN) {
-	// 		wsRef.current.send(JSON.stringify({ action: "getBooks" }));
-	// 	} else {
-	// 		console.error("WebSocket is not open");
-	// 	}
-	// };
-
-	const fetchBooks = async () => {
-		try {
-			const response = await axios.get("http://localhost:5000/api/books");
-			setBooks(response.data);
-		} catch (error) {
-			console.error("Failed to fetch books:", error);
+	const fetchBooks = useCallback(() => {
+		if (wsRef.current?.readyState === WebSocket.OPEN) {
+			wsRef.current.send(JSON.stringify({ action: "getBooks" }));
+		} else {
+			console.error("WebSocket is not open");
 		}
-	};
+	}, []);
 
 	return (
 		<AuthContext.Provider value={{ isAuthenticated, userRole, login, logout, books, fetchBooks }}>
