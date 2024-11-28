@@ -27,7 +27,7 @@ export default function Search() {
 		const results = books.filter(
 			(book) =>
 				book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-				book?.author?.toLowerCase().includes(searchTerm.toLowerCase()),
+				book.author.toLowerCase().includes(searchTerm.toLowerCase()),
 		);
 		setSearchResults(results);
 	};
@@ -52,9 +52,10 @@ export default function Search() {
 					<Button type='submit'>Search</Button>
 				</div>
 			</form>
-			{searchResults.length > 0 ?
-				<BookTable books={searchResults} />
-			:	<BookTable books={books} />}
+			<BookTable
+				books={searchResults.length > 0 ? searchResults : books}
+				isAdmin={false}
+			/>
 		</div>
 	);
 }

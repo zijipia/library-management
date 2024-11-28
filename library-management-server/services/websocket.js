@@ -18,7 +18,7 @@ wss.on("connection", (ws) => {
         JSON.stringify({
           action: "authResult",
           success: successs,
-          role: "user",
+          role: "admin",
         })
       );
     } else if (data.action === "getBooks") {

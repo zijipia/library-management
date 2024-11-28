@@ -1,8 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
 
 const AuthContext = createContext();
 
@@ -14,19 +13,15 @@ export function AuthProvider({ children }) {
 	const wsRef = useRef(null);
 
 	useEffect(() => {
-		// Khôi phục trạng thái từ localStorage
 		const storedAuth = localStorage.getItem("isAuthenticated");
 		const storedRole = localStorage.getItem("userRole");
 
 		if (storedAuth === "true" && storedRole) {
 			setIsAuthenticated(true);
 			setUserRole(storedRole);
-
-			// Điều hướng đến đúng trang dựa trên vai trò
 			router.push(storedRole === "admin" ? "/admin" : "/search");
 		}
 
-		// Thiết lập WebSocket
 		wsRef.current = new WebSocket("ws://localhost:8080");
 
 		wsRef.current.onopen = () => {
@@ -49,6 +44,10 @@ export function AuthProvider({ children }) {
 				}
 			} else if (data.action === "books") {
 				setBooks(data.books);
+			} else if (data.action === "bookAdded") {
+				setBooks((prevBooks) => [...prevBooks, data.book]);
+			} else if (data.action === "bookDeleted") {
+				setBooks((prevBooks) => prevBooks.filter((book) => book.id !== data.bookId));
 			}
 		};
 
@@ -61,22 +60,22 @@ export function AuthProvider({ children }) {
 		};
 	}, [router]);
 
-	const login = (qrData) => {
+	const login = useCallback((qrData) => {
 		if (wsRef.current?.readyState === WebSocket.OPEN) {
 			wsRef.current.send(JSON.stringify({ action: "scanQR", data: qrData }));
 		} else {
 			console.error("WebSocket is not open");
 		}
-	};
+	}, []);
 
-	const logout = () => {
+	const logout = useCallback(() => {
 		setIsAuthenticated(false);
 		setUserRole(null);
 		setBooks([]);
 		localStorage.removeItem("isAuthenticated");
 		localStorage.removeItem("userRole");
 		router.push("/");
-	};
+	}, [router]);
 
 	const fetchBooks = useCallback(() => {
 		if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -86,8 +85,24 @@ export function AuthProvider({ children }) {
 		}
 	}, []);
 
+	const addBook = useCallback((book) => {
+		if (wsRef.current?.readyState === WebSocket.OPEN) {
+			wsRef.current.send(JSON.stringify({ action: "addBook", book }));
+		} else {
+			console.error("WebSocket is not open");
+		}
+	}, []);
+
+	const deleteBook = useCallback((bookId) => {
+		if (wsRef.current?.readyState === WebSocket.OPEN) {
+			wsRef.current.send(JSON.stringify({ action: "deleteBook", bookId }));
+		} else {
+			console.error("WebSocket is not open");
+		}
+	}, []);
+
 	return (
-		<AuthContext.Provider value={{ isAuthenticated, userRole, login, logout, books, fetchBooks }}>
+		<AuthContext.Provider value={{ isAuthenticated, userRole, login, logout, books, fetchBooks, addBook, deleteBook }}>
 			{children}
 		</AuthContext.Provider>
 	);
